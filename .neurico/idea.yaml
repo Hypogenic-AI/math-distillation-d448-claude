@@ -1,0 +1,38 @@
+idea:
+  title: Mathematics Distillation Challenge
+  domain: mathematics
+  hypothesis: 'Given two equations over magmas, it is possible to determine whether
+    Equation 1 implies Equation 2 using a model guided by a cheatsheet prompt.
+
+    '
+  background:
+    description: 'The pilot task is equational implication over magmas: given Equation
+      1 and Equation 2, determine whether Equation 1 implies Equation 2.
+
+      This challenge is based on the Equational Theories Project.
+
+      Example: E_4: x = x * y implies E_3: x = x * x.
+
+      Raw implication graph: export_raw_implications
+
+      Law list (4694 laws): equations.txt
+
+      Core Task: Participants submit a cheatsheet (plain text prompt guidance). The
+      model then solves implication problems of the form: Does Equation 1 imply Equation
+      2? In Stage 1, the expected behavior is to provide a true/false answer to the
+      question.
+
+      Full details are on this page:
+
+      https://competition.sair.foundation/competitions/mathematics-distillation-challenge-equational-theories-stage1/overview
+
+      '
+  metadata:
+    author: Chenhao Tan
+    source: IdeaHub
+    source_url: https://hypogenic.ai/ideahub/idea/KatHOhR2FvedFXhjBnmv
+    idea_id: mathematics_distillation_chall_20260330_024615_fcf1d3c8
+    created_at: '2026-03-30T02:46:15.269898'
+    status: submitted
+    github_repo_name: math-distillation-d448-claude
+    github_repo_url: https://github.com/Hypogenic-AI/math-distillation-d448-claude
