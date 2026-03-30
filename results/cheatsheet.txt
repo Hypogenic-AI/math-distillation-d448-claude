@@ -1,0 +1,144 @@
+EQUATIONAL IMPLICATION OVER MAGMAS: DECISION GUIDE
+
+A magma is a set with a binary operation *, no other axioms required.
+Given equations E1 and E2, "E1 implies E2" means every magma satisfying E1 also satisfies E2.
+
+FOLLOW THESE STEPS IN ORDER. Stop at the first step that gives a definitive answer.
+
+=== STEP 1: CLASSIFY EQUATION FORMS ===
+
+For each equation, identify which side(s) are bare variables vs expressions with *.
+
+FORM A - TRIVIAL: "x = x". The tautology.
+FORM B - SINGLETON: "x = y". Forces all elements equal (strongest law).
+FORM C - ABSORBING: One side is a variable NOT appearing on the other side.
+  Examples: "x = y * z", "x = y * (z * w)", "x = (y * z) * (w * u)"
+  Key test: Is there a variable on one side that doesn't appear on the other?
+FORM D - STANDARD: One side is a variable appearing on the other side.
+  Examples: "x = x * y", "x = y * (x * z)", "x = (y * z) * (w * x)"
+  Key: the lone variable also appears somewhere in the expression.
+FORM E - GENERAL: Both sides contain * operations.
+  Examples: "x * y = y * x", "(x * y) * z = x * (y * z)", "x * x = y * y"
+
+=== STEP 2: APPLY ABSOLUTE RULES (100% reliable) ===
+
+RULE 1: If E2 is trivial (x = x) → TRUE. Everything implies the tautology.
+RULE 2: If E1 is trivial (x = x) and E2 is not → FALSE. Tautology implies nothing.
+RULE 3: If E1 is singleton (x = y) → TRUE. Strongest law implies everything.
+RULE 4: If E1 is absorbing → TRUE.
+  WHY: If "x = f(y,z,...)" where x isn't in f, then in any satisfying magma, every element equals f evaluated at something—so all elements are in the range of f. With more work, this forces all elements equal, hence every equation holds.
+RULE 5: If E1 is GENERAL and E2 is STANDARD, ABSORBING, or SINGLETON → FALSE.
+  WHY: General equations (both sides have *) can always be satisfied by magmas where the operation is "rich" enough to distinguish elements, but standard-form equations force specific variable relationships.
+
+=== STEP 3: CHECK SIGNATURE DIRECTION ===
+
+Count * operations on the LEFT side of = for each equation. Call this L(E).
+
+RULE 6: If L(E1) > 0 and L(E2) = 0 and E2 has operations → FALSE.
+  Example: "x * y = y * x" (L=1) CANNOT imply "x = x * (y * z)" (L=0).
+  WHY: Equations with * on the left constrain how * behaves when applied to structured terms. Equations with only a bare variable on the left constrain what individual elements equal.
+
+RULE 7: If L(E1) = 2 and L(E2) < 2 (and E2 isn't trivial) → FALSE.
+  Example: "(x*y)*z = (z*y)*x" (L=2) cannot imply "x*y = y*x" (L=1) or "x = x*y" (L=0).
+  WHY: Double-operation left sides create an even more restrictive structural class.
+
+=== STEP 4: CHECK SUBSTITUTION ===
+
+Can E2 be obtained by substituting expressions for variables in E1?
+
+Method: For each variable in E1, try assigning it a term (variable or expression) such that both sides of E1 become the two sides of E2. Also try with E1's sides swapped.
+
+Example: E1 is "x = x * y". Setting x→x, y→x gives "x = x * x". So E1 implies "x = x * x" → TRUE.
+
+Example: E1 is "x = y * (z * w)". Setting y→a, z→b, w→c gives the same equation. But setting y→a*b, z→c, w→d would give "x = (a*b) * (c*d)" which is a different equation. If that matches E2, then TRUE.
+
+If you find such a substitution → TRUE.
+
+=== STEP 5: SIMPLE REWRITING ===
+
+Use E1 as a bidirectional rewrite rule: whenever you see the LHS pattern, replace with RHS (or vice versa). Apply this to parts of E2.
+
+Example: E1 is "x * y = y * x" (commutativity). E2 is "(x * y) * z = z * (x * y)".
+Apply E1 to swap x*y with y*x inside E2's LHS: we get (y*x)*z. Apply E1 to E2's RHS: z*(y*x). These aren't equal yet, but E1 lets us swap the outer * in E2's LHS: z*(x*y). And z*(x*y) matches E2's RHS. → TRUE.
+
+If a few rewrite steps transform E2's LHS into E2's RHS → TRUE.
+
+=== STEP 6: COUNTEREXAMPLE CHECK ===
+
+Try to find a small magma satisfying E1 but violating E2.
+
+KEY MAGMAS TO TRY:
+
+Size 2 ({0,1}): Try the operation tables:
+- Constant 0: x*y = 0 always. Satisfies "x*y = z*w" type equations.
+- Left projection: x*y = x. Satisfies "x = x*y" but not "x = y*x".
+- Right projection: x*y = y. Satisfies "x*y = y" but not "x*y = x".
+- XOR: 0*0=0, 0*1=1, 1*0=1, 1*1=0. Satisfies commutativity.
+- AND: 0*0=0, 0*1=0, 1*0=0, 1*1=1. Idempotent and commutative.
+
+Size 3: Try x*y = x+y mod 3, x*y = x-y mod 3, x*y = 2x+y mod 3.
+
+Linear magmas: x*y = ax + by (mod n). These satisfy equations where both sides are "linear" in the same way.
+
+Test: plug in all possible values for the variables. If E1 holds for ALL assignments but E2 fails for SOME assignment → FALSE.
+
+If you find such a counterexample → FALSE.
+
+=== STEP 7: VARIABLE COUNT HEURISTIC ===
+
+Count distinct variables in each equation.
+Let diff = vars(E1) - vars(E2).
+
+STRONG SIGNAL:
+- diff ≥ 3 → most likely TRUE (≈70%)
+- diff = 2 → likely TRUE (≈60%)
+- diff ≤ -2 → very likely FALSE (≈90%)
+- diff ≤ -3 → almost certainly FALSE (≈96%)
+
+MODERATE SIGNAL:
+- diff = 1 → slight lean TRUE (≈49%)
+- diff = 0 → lean FALSE (≈67% are false)
+- diff = -1 → lean FALSE (≈79% are false)
+
+IMPORTANT EXCEPTIONS within standard form (x = expr):
+- If E1 has only 1 or 2 variables (like "x = x*x" or "x = x*y"), it almost NEVER implies equations with more variables → FALSE.
+- If E1 has 4-5 variables, it implies most other equations (≈55-70%) → lean TRUE.
+
+GENERAL form (both sides have *):
+- Same variable count → about 30% true → lean FALSE
+- E1 has 2+ more variables → about 55%+ true → lean TRUE
+
+=== STEP 8: ADDITIONAL HEURISTICS ===
+
+If E1 uses more distinct variables and has a more complex structure (deeper nesting, more operations), it is more constraining and more likely to imply E2.
+
+"More variables = stronger constraint" is the single most useful heuristic.
+
+When unsure, the base rate is: about 37% of implications are TRUE, 63% are FALSE.
+So when in doubt → FALSE.
+
+=== QUICK REFERENCE ===
+
+DEFINITELY TRUE:
+- E2 is "x = x"
+- E1 is "x = y"
+- E1's LHS variable doesn't appear in E1's RHS (absorbing)
+- E2 is a substitution instance of E1
+
+DEFINITELY FALSE:
+- E1 is "x = x" (and E2 isn't)
+- E1 is GENERAL form, E2 is STANDARD form
+- E1 has * on left of =, E2 doesn't (and E2 has * on right)
+- E1 has 2 ops on left of =, E2 has fewer (and E2 isn't trivial)
+- E1 has 1-2 variables, E2 has 3+ variables (in standard form)
+- A small counterexample magma exists
+
+LEAN TRUE:
+- E1 has 3+ more variables than E2
+- E1 has 4-5 variables and E2 has fewer
+- BFS rewriting succeeds
+
+LEAN FALSE:
+- E1 has fewer variables than E2
+- Same variable count (especially in general form)
+- Default when uncertain

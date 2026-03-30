@@ -1,0 +1,131 @@
+\section{Preliminaries}\label{sec:prelim}
+
+\subsection{Magmas and equational laws}
+
+\begin{definition}\label{def:magma}
+A \emph{magma} is a pair $(M, \op)$ where $M$ is a nonempty set and
+$\op \colon M \times M \to M$ is a binary operation.  No axioms are imposed on~$\op$.
+\end{definition}
+
+We write $x \op y$ for the application of the binary operation.  Terms over the
+magma signature are built from variables $x, y, z, w, \ldots$ and the binary
+operation~$\op$.  We denote the set of all such terms by $T(\op)$.
+
+\begin{definition}\label{def:eqlaw}
+An \emph{equational law} is an expression $s = t$ where $s, t \in T(\op)$.
+The \emph{order} of a law is the total number of occurrences of~$\op$ in $s$
+and~$t$.
+\end{definition}
+
+The Equational Theories Project \cite{ETP2025} catalogued all $4{,}694$
+equational laws of order at most~$4$, up to renaming of variables and symmetry
+of the equality sign.  We denote these laws $E_1, E_2, \ldots, E_{4694}$.
+
+\begin{definition}\label{def:implication}
+Let $E_i$ and $E_j$ be equational laws.  We say $E_i$ \emph{implies} $E_j$,
+written $E_i \models E_j$, if every magma satisfying $E_i$ also
+satisfies~$E_j$.  We say $E_i$ \emph{finitely implies} $E_j$, written
+$E_i \models_{\mathrm{fin}} E_j$, if every \emph{finite} magma satisfying $E_i$
+also satisfies~$E_j$.
+\end{definition}
+
+By a classical result of Birkhoff, $E_i \models E_j$ if and only if $E_j$ can
+be derived from $E_i$ by finitely many applications of substitution and the
+rewrite rule given by~$E_i$.  The relation $\models$ is a preorder on the set of
+equational laws, and we denote the induced equivalence relation by~$\equiv$.
+
+\begin{definition}\label{def:equiv-class}
+Two laws $E_i$ and $E_j$ are \emph{equivalent}, written $E_i \equiv E_j$, if
+$E_i \models E_j$ and $E_j \models E_i$.
+\end{definition}
+
+The $4{,}694$ laws form $1{,}415$ equivalence classes under~$\equiv$.  The
+largest class contains $1{,}496$ laws, all equivalent to the \emph{singleton
+law} $E_2 \colon x = y$.
+
+\subsection{Structural classification of equational laws}
+
+We now introduce the central definitions of this paper: a classification of
+equational laws by their syntactic structure.
+
+\begin{definition}\label{def:form}
+Let $E \colon s = t$ be an equational law.  The \emph{structural form} of $E$
+is one of the following five types:
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{Trivial:} $s$ and $t$ are the same variable (e.g., $x = x$).
+  There is exactly one such law, $E_1$.
+\item \textbf{Singleton:} $s$ and $t$ are distinct variables (e.g., $x = y$).
+  There is exactly one such law, $E_2$.
+\item \textbf{Absorbing:} one side is a variable that does not appear on the
+  other side (e.g., $x = y \op (z \op w)$).  There are $815$ such laws.
+\item \textbf{Standard (lhs\_var):} one side is a variable that \emph{does}
+  appear on the other side (e.g., $x = x \op (y \op z)$).  There are $2{,}322$
+  such laws.
+\item \textbf{General:} both sides contain at least one occurrence of~$\op$
+  (e.g., $x \op y = y \op x$).  There are $1{,}555$ such laws.
+\end{enumerate}
+We write $\form(E) \in \{\text{triv}, \text{sing}, \text{abs}, \text{std},
+\text{gen}\}$ for the structural form of~$E$.
+\end{definition}
+
+\begin{remark}\label{rem:form-partition}
+The five forms partition the $4{,}694$ laws:
+$1 + 1 + 815 + 2{,}322 + 1{,}555 = 4{,}694$.  By convention, when a law has
+one side that is a bare variable, we take that side to be the left-hand side.
+\end{remark}
+
+\begin{definition}\label{def:signature}
+The \emph{signature} of an equational law $E \colon s = t$ is the pair
+$\sig(E) = (a, b)$ where $a$ is the number of occurrences of~$\op$ in~$s$ and
+$b$ is the number of occurrences of~$\op$ in~$t$.
+\end{definition}
+
+\begin{example}\label{ex:signatures}
+The law of associativity, $x \op (y \op z) = (x \op y) \op z$, has signature
+$(2, 2)$.  The law $x = x \op (y \op z)$ has signature $(0, 2)$.  The
+singleton law $x = y$ has signature $(0, 0)$.
+\end{example}
+
+\begin{definition}\label{def:nvar}
+For an equational law $E$, we write $\nvar(E)$ for the number of
+\emph{distinct variables} appearing in~$E$.
+\end{definition}
+
+\begin{example}\label{ex:nvar}
+The law $x = x \op y$ has $\nvar = 2$.  The law
+$x = (y \op z) \op (y \op w)$ has $\nvar = 4$.  The singleton law $x = y$
+has $\nvar = 2$.
+\end{example}
+
+\subsection{Duality}
+
+\begin{definition}\label{def:duality}
+The \emph{dual} (or \emph{conjugate}) of a term $t \in T(\op)$ is obtained by
+replacing every subterm $u \op v$ with $v \op u$.  The dual of a law
+$E \colon s = t$ is the law $E^* \colon s^* = t^*$.
+\end{definition}
+
+Duality is a symmetry of the implication preorder: $E_i \models E_j$ if and
+only if $E_i^* \models E_j^*$ \cite{ETP2025}.  This effectively halves the
+number of implications that require independent verification.
+
+\subsection{The implication matrix}
+
+We denote the full implication matrix by $\mI \in \{0, 1\}^{4694 \times 4694}$,
+where $\mI_{ij} = 1$ if and only if $E_i \models E_j$.  The following
+statistics, computed from the complete matrix \cite{ETP2025}, inform our
+analysis.
+
+\begin{center}
+\begin{tabular}{@{}lr@{}}
+\toprule
+Statistic & Value \\
+\midrule
+Total non-reflexive pairs & $22{,}028{,}942$ \\
+True implications & $8{,}178{,}279$ (37.1\%) \\
+False implications & $13{,}855{,}357$ (62.9\%) \\
+Equivalence classes & $1{,}415$ \\
+Laws equivalent to $E_2$ & $1{,}496$ \\
+\bottomrule
+\end{tabular}
+\end{center}

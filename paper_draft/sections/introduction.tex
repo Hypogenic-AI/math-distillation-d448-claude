@@ -1,0 +1,80 @@
+\section{Introduction}\label{sec:intro}
+
+A \emph{magma} is a set equipped with a single binary operation subject to no
+axioms.  Despite this minimal structure, the lattice of equational theories on
+magmas is remarkably rich: the Equational Theories Project \cite{ETP2025}
+completely determined the $4{,}694 \times 4{,}694$ implication matrix for all
+equational laws of order at most four, formalizing every proof in Lean.  Of the
+$22{,}033{,}636$ ordered pairs (including reflexive), $8{,}178{,}279$ (37.1\%)
+are true implications and $13{,}855{,}357$ (62.9\%) are false.
+
+This complete determination, while a tour de force of collaborative formal
+mathematics, produces a matrix that is opaque to human understanding.  The
+natural question arises: \emph{to what extent can the implication structure be
+explained by simple structural properties of the equations themselves?}
+
+This question has both theoretical and practical motivation.  Theoretically,
+understanding which syntactic features of an equation determine its
+implications sheds light on the algebraic content encoded in equational laws.
+Practically, the Mathematics Distillation Challenge \cite{Tao2026blog,SAIR2026}
+asks whether the implication structure can be compressed into a short text
+(under 10KB) that enables even a weak language model to predict implications
+--- a test of whether mathematical knowledge admits compact, interpretable
+representations.
+
+\subsection{Prior work}
+The Equational Theories Project \cite{ETP2025} established the complete
+implication graph using a combination of techniques: finite magma
+counterexamples (refuting 96.3\% of false implications with only 524 distinct
+magmas of size $\le 4$), syntactic rewriting, matching invariants, automated
+theorem provers (Vampire, Prover9, Z3), equational reasoning via e-graphs, and
+SAT solvers.  They showed that the $42$\,MB bit table compresses to $40$\,kB
+with LZMA2, and that a five-layer convolutional neural network achieves 99.7\%
+prediction accuracy from equation syntax alone, demonstrating high
+compressibility.
+
+Berlioz and Melli\`{e}s \cite{BM2026} introduced a \emph{Stone pairing}
+approach, computing for each equation the probability that a random variable
+assignment satisfies it in a randomly sampled finite magma.  PCA on the
+resulting probability matrix produces a three-dimensional latent space in which
+equivalent theories cluster tightly and implications flow in a structured,
+oriented manner.
+
+Aliniaeifard and Li \cite{AL2025} developed neural methods for identifying
+sufficient conditions for mathematical implications, while Olausson et
+al.~\cite{LINC2023} showed that combining language model parsing with external
+logical reasoning outperforms pure neural approaches on logical inference tasks.
+
+\subsection{Our contributions}
+We systematically extract decision rules from the full implication matrix and
+prove their correctness.  Our contributions are as follows.
+
+\begin{itemize}[leftmargin=*,itemsep=2pt,topsep=2pt]
+\item We introduce a five-class \emph{structural form} classification of
+  equational laws (Definition~\ref{def:form}) and prove that form-based
+  implication rules cover 39.8\% of all non-reflexive pairs with zero error
+  (Theorem~\ref{thm:absorbing}, Theorem~\ref{thm:general-nonimplication}).
+
+\item We establish a \emph{signature direction principle}
+  (Theorem~\ref{thm:sig-direction}) showing that equations with operations on
+  the left-hand side never imply equations with a bare variable on the
+  left-hand side, covering an additional 22\% of pairs.
+
+\item We prove that the difference in distinct variable counts is the dominant
+  heuristic predictor for the remaining cases
+  (Proposition~\ref{prop:nvar-monotone}) and provide calibrated probability
+  estimates.
+
+\item We compose these rules into an ordered decision procedure that achieves
+  88.9\% accuracy on random samples, compared to 62.9\% for the always-false
+  baseline.
+\end{itemize}
+
+\subsection{Paper organization}
+Section~\ref{sec:prelim} introduces the necessary definitions and notation.
+Section~\ref{sec:main} presents our main results: the structural classification,
+form-based implication rules, signature direction principle, variable count
+analysis, and the combined decision procedure with its empirical evaluation.
+Section~\ref{sec:discussion} discusses limitations, connections to related
+problems, and open questions.  Section~\ref{sec:conclusion} summarizes our
+findings.

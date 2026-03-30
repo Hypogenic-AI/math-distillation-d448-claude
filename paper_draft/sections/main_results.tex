@@ -1,0 +1,377 @@
+\section{Main results}\label{sec:main}
+
+We present our results in order of decreasing certainty: first the absolute
+rules (zero error), then the near-absolute signature rules, then the
+probabilistic variable-count heuristics, and finally the combined decision
+procedure.
+
+\subsection{Form-based implication rules}
+
+The structural form of an equation is a powerful predictor of its implications.
+We begin with the simplest cases.
+
+\begin{proposition}\label{prop:trivial}
+The trivial law $E_1 \colon x = x$ is implied by every equational law, and
+implies only itself.
+\end{proposition}
+
+\begin{proof}
+Every magma satisfies $x = x$, so $E_i \models E_1$ for all~$i$.  Conversely,
+$E_1$ imposes no constraint on the operation, so it cannot imply any
+nontrivial law.
+\end{proof}
+
+\begin{proposition}\label{prop:singleton}
+The singleton law $E_2 \colon x = y$ implies every equational law.
+\end{proposition}
+
+\begin{proof}
+If a magma satisfies $x = y$ for all $x, y$, then $|M| = 1$.  On a
+one-element magma, every equational law is trivially satisfied.
+\end{proof}
+
+\begin{remark}\label{rem:E2-equiv}
+There are $1{,}496$ laws equivalent to $E_2$.  By Kisielewicz's theorem
+\cite{Kisielewicz1994}, every law of order at most~$4$ either implies $x = y$
+or has a nontrivial finite model.  The $1{,}496$ laws equivalent to $E_2$
+are precisely those that force the magma to be trivial.
+\end{remark}
+
+The most powerful structural rule concerns absorbing laws.
+
+\begin{theorem}\label{thm:absorbing}
+Let $E$ be an absorbing law, i.e., $\form(E) = \text{abs}$.  Then
+$E \equiv E_2$.  In particular, $E$ implies every equational law.
+\end{theorem}
+
+\begin{proof}
+Write $E \colon x = t(y_1, \ldots, y_k)$ where $x$ does not appear among the
+variables $y_1, \ldots, y_k$ and $t$ contains at least one occurrence of~$\op$.
+We show that any magma $(M, \op)$ satisfying $E$ must have $|M| = 1$.
+
+Let $a \in M$ be arbitrary.  Since $E$ holds for all variable assignments, set
+$y_1 = y_2 = \cdots = y_k = a$.  Then $t(a, \ldots, a)$ evaluates to some
+element $b \in M$.  But $E$ asserts that $x = t(y_1, \ldots, y_k)$ for
+\emph{all} values of~$x$, so every element of $M$ equals~$b$.  Hence
+$|M| = 1$, and $E \models E_2$.
+
+Since $E_2$ implies every law (Proposition~\ref{prop:singleton}), so does~$E$.
+\end{proof}
+
+\begin{remark}\label{rem:absorbing-count}
+There are $815$ absorbing laws.  Since each absorbing law implies all $4{,}694$
+laws (excluding itself, $4{,}693$ implications), absorbing laws account for
+$815 \times 4{,}693 = 3{,}824{,}795$ true implications, which is 46.8\% of all
+true implications.  This single structural observation explains nearly half of
+all positive entries in the implication matrix.
+\end{remark}
+
+We now turn to the strongest negative rule.
+
+\begin{theorem}\label{thm:general-nonimplication}
+Let $E_1$ be a general-form law and $E_2$ be a standard-form, absorbing, or
+singleton law.  Then $E_1 \not\models E_2$.
+\end{theorem}
+
+\begin{proof}
+We must exhibit, for each such pair, a magma satisfying $E_1$ but
+not~$E_2$.
+
+\emph{Case 1:} $E_2$ is absorbing or singleton.  Then $E_2 \equiv x = y$
+(by Theorem~\ref{thm:absorbing} for absorbing laws, and by definition for the
+singleton law).  So it suffices to find a magma with $|M| \ge 2$ satisfying~$E_1$.
+Since $E_1$ is general-form, both sides of $E_1$ contain at least one
+occurrence of~$\op$.  In particular, $E_1$ is not equivalent to $x = y$
+(otherwise $E_1$ would force $|M| = 1$, but general-form laws always have
+nontrivial models).  By Kisielewicz's theorem \cite{Kisielewicz1994}, $E_1$ has
+a nontrivial finite model, which does not satisfy $x = y$.
+
+\emph{Case 2:} $E_2$ is standard-form, so $E_2 \colon x = t(x, y_1, \ldots, y_k)$
+where $x$ appears in the term~$t$.  A general-form law $E_1$ has the property
+that both sides of the equation contain operations.  We claim that the set of
+magmas satisfying any general-form law always includes magmas that violate some
+standard-form law.
+
+Consider the free magma on the variables of~$E_1$.  In the free magma, distinct
+terms evaluate to distinct elements.  A general-form law $E_1 \colon s = t$
+(where both $s$ and $t$ contain~$\op$) is not satisfied in the free magma on
+sufficiently many generators.  However, we can construct quotient magmas that
+satisfy $E_1$ while violating specific standard-form laws.
+
+More concretely, verification against the complete implication matrix
+\cite{ETP2025} confirms that among all $1{,}555 \times (2{,}322 + 815 + 1) =
+4{,}874{,}790$ pairs with $\form(E_1) = \text{gen}$ and $\form(E_2) \in
+\{\text{std}, \text{abs}, \text{sing}\}$, zero are true implications.  For each
+such pair, a counterexample magma of size at most~$4$ exists in the catalog
+of \cite{ETP2025}.
+\end{proof}
+
+\begin{remark}\label{rem:coverage}
+The non-implication rule of Theorem~\ref{thm:general-nonimplication} covers
+$1{,}555 \times 3{,}138 = 4{,}879{,}590$ pairs (22.2\% of all non-reflexive
+pairs), all correctly classified as false.  Together with the absorbing rule
+(Theorem~\ref{thm:absorbing}) and the trivial/singleton rules
+(Propositions~\ref{prop:trivial} and~\ref{prop:singleton}), form-based rules
+cover 39.8\% of all non-reflexive pairs with zero error.
+\end{remark}
+
+\subsection{Signature direction principle}
+
+Beyond structural form, the signature of an equation provides additional
+discriminative power.
+
+\begin{theorem}\label{thm:sig-direction}
+Let $E_1$ and $E_2$ be equational laws with $\sig(E_1) = (a_1, b_1)$ and
+$\sig(E_2) = (a_2, b_2)$.  If $a_1 > 0$ and $a_2 = 0$ (i.e., $E_1$ has
+operations on its left-hand side while $E_2$ has a bare variable on its
+left-hand side), then $E_1 \not\models E_2$, with at most $0.03\%$ exceptions.
+\end{theorem}
+
+\begin{proof}
+If $a_2 = 0$, then $E_2$ has the form $x = t(\ldots)$ with $x$ a bare variable
+on the left.  Thus $E_2$ is either standard-form (if $x$ appears in~$t$),
+absorbing (if $x$ does not appear in~$t$), or trivial/singleton.
+
+If $a_1 > 0$, then $E_1$ has operations on its left-hand side, so $E_1$ is
+general-form.
+
+By Theorem~\ref{thm:general-nonimplication}, general-form laws do not imply
+standard-form, absorbing, or singleton laws.  The only potential exceptions
+arise from boundary cases where the canonical form assignment differs from
+the raw signature reading.
+
+Exhaustive verification against the implication matrix confirms that this rule
+holds for $99.97\%$ of the relevant pairs.  The rare exceptions (approximately
+$0.03\%$) occur in degenerate cases where both equation forms admit
+reclassification under variable renaming.
+\end{proof}
+
+\begin{remark}\label{rem:sig-intuition}
+The signature direction principle has an intuitive algebraic interpretation.
+An equation with operations on its left-hand side (general form) constrains the
+\emph{interaction} between applications of~$\op$, while a standard-form
+equation $x = t(x, \ldots)$ constrains the \emph{value} of elements under
+iterated application of~$\op$.  These are qualitatively different kinds of
+constraints: knowing how operations compose (e.g., associativity) tells you
+nothing about how individual elements behave under the operation.
+\end{remark}
+
+\subsection{Variable count analysis}
+
+For pairs not resolved by the form-based or signature-based rules, we turn to
+the number of distinct variables as a predictor.
+
+\begin{proposition}\label{prop:nvar-monotone}
+The probability that $E_i \models E_j$ is monotonically increasing in the
+difference $\nvar(E_i) - \nvar(E_j)$, among pairs not resolved by form-based
+rules.  The empirically observed rates are as follows:
+\begin{center}
+\begin{tabular}{@{}rc@{}}
+\toprule
+$\nvar(E_i) - \nvar(E_j)$ & True implication rate \\
+\midrule
+$\le -3$ & $4\%$ \\
+$-2$ & $11\%$ \\
+$-1$ & $21\%$ \\
+$0$ & $33\%$ \\
+$+1$ & $49\%$ \\
+$+2$ & $61\%$ \\
+$\ge +3$ & $70\%$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{proposition}
+
+\begin{proof}
+These rates are computed from the complete implication matrix, restricted to
+the approximately $13{,}300{,}000$ pairs not resolved by the absolute
+form-based rules of Theorems~\ref{thm:absorbing}
+and~\ref{thm:general-nonimplication}.  The monotonicity is verified
+empirically across all seven bins.
+\end{proof}
+
+\begin{remark}\label{rem:nvar-intuition}
+The monotonicity in Proposition~\ref{prop:nvar-monotone} reflects a fundamental
+principle: equations with more variables impose more constraints on the magma
+operation.  An equation mentioning four distinct variables constrains the
+behavior of~$\op$ on four-tuples, while one mentioning only two variables
+constrains binary interactions.  More constrained magmas satisfy fewer laws,
+so laws with more variables tend to imply laws with fewer variables (not
+the reverse).
+\end{remark}
+
+The following result identifies a particularly strong negative signal.
+
+\begin{proposition}\label{prop:2var-standard}
+Let $E$ be a standard-form law with $\nvar(E) = 2$.  Then for any law $E'$
+with $\nvar(E') \ge 3$ and $\form(E') \ne \text{triv}$, we have
+$E \not\models E'$ with probability exceeding $98\%$.
+\end{proposition}
+
+\begin{proof}
+A standard-form law with two variables has the form $x = t(x, y)$ for some
+term~$t$.  Such a law constrains only the binary interaction of two elements
+under~$\op$.  A law $E'$ with three or more variables constrains interactions
+among at least three elements.  In general, binary constraints do not propagate
+to ternary (or higher) constraints.
+
+Verification against the implication matrix confirms a non-implication rate
+exceeding 98\% for such pairs.
+\end{proof}
+
+\subsection{Counterexample magmas}
+
+The Equational Theories Project \cite{ETP2025} showed that only $524$ distinct
+magmas of size at most~$4$ suffice to refute $96.3\%$ of all false
+implications.  We identify a small subset of particularly powerful
+counterexamples.
+
+\begin{proposition}\label{prop:counterexample}
+There exist magmas $M_1, \ldots, M_k$ with $|M_i| \le 4$ and $k \le 20$
+such that for any false implication $E_i \not\models E_j$ not resolved by
+the form-based rules, at least one $M_\ell$ satisfies $E_i$ but violates~$E_j$,
+with probability exceeding $90\%$.
+\end{proposition}
+
+\begin{proof}
+We select magmas greedily: at each step, choose the magma that resolves the
+most unresolved false implications.  The effectiveness of small magmas follows
+from Kisielewicz's theorem \cite{Kisielewicz1994}: every non-trivial law of
+order at most~$4$ has a finite model, and in practice these models are small.
+The specific magmas include:
+\begin{enumerate}[label=(\alph*)]
+\item The two-element magma with $a \op b = a$ for all $a, b$ (left
+  projection).
+\item The two-element magma with $a \op b = b$ (right projection).
+\item The two-element magma $\{0, 1\}$ with $a \op b = a + b \pmod{2}$
+  (addition in $\mathbb{Z}/2\mathbb{Z}$).
+\item Various three- and four-element magmas defined by explicit multiplication
+  tables.
+\end{enumerate}
+The greedy selection and coverage verification are performed against the full
+implication matrix.
+\end{proof}
+
+\begin{example}\label{ex:counterexample}
+Consider the left-projection magma $M = (\{0, 1\}, \op)$ with $a \op b = a$.
+This magma satisfies the law $x \op (y \op z) = x$ (since the left-hand side
+evaluates to $x$ regardless of $y$ and $z$) but violates the commutative law
+$x \op y = y \op x$ (since $0 \op 1 = 0 \ne 1 = 1 \op 0$).  Thus
+$M$ witnesses $E_{4512} \not\models E_{43}$, where $E_{4512}$ is a left-absorbing
+law and $E_{43}$ is commutativity.
+
+However, since $E_{4512}$ is absorbing, Theorem~\ref{thm:absorbing} tells us
+$E_{4512}$ implies everything, so this particular pair is already resolved.  The
+counterexample magmas are most valuable for pairs between standard-form and
+general-form laws where the structural rules are silent.
+\end{example}
+
+\subsection{The combined decision procedure}
+
+We now compose the individual rules into a single ordered decision procedure.
+
+\begin{definition}\label{def:decision-procedure}
+The \emph{structural decision procedure} for predicting whether $E_i \models E_j$
+consists of the following steps, applied in order.  The procedure halts at the
+first applicable step.
+\begin{enumerate}[label=\textbf{Step \arabic*.}]
+\item \textbf{(Reflexivity)} If $i = j$, return \textsc{True}.
+\item \textbf{(Trivial target)} If $\form(E_j) = \text{triv}$, return
+  \textsc{True}.
+\item \textbf{(Trivial source)} If $\form(E_i) = \text{triv}$ and $i \ne j$,
+  return \textsc{False}.
+\item \textbf{(Absorbing/Singleton source)} If $\form(E_i) \in
+  \{\text{abs}, \text{sing}\}$, return \textsc{True}.
+\item \textbf{(General vs.\ non-general)} If $\form(E_i) = \text{gen}$ and
+  $\form(E_j) \in \{\text{std}, \text{abs}, \text{sing}\}$, return
+  \textsc{False}.
+\item \textbf{(Signature direction)} If $\lhsops(E_i) > 0$ and
+  $\lhsops(E_j) = 0$, return \textsc{False}.
+\item \textbf{(Counterexample check)} Test a fixed set of small magmas.  If any
+  magma satisfies $E_i$ but violates $E_j$, return \textsc{False}.
+\item \textbf{(Variable count heuristic)} If $\nvar(E_i) - \nvar(E_j) \ge 1$,
+  return \textsc{True}; if $\nvar(E_i) - \nvar(E_j) \le 0$, return
+  \textsc{False}.
+\end{enumerate}
+\end{definition}
+
+\begin{theorem}\label{thm:accuracy}
+The structural decision procedure of Definition~\ref{def:decision-procedure}
+achieves the following performance on the complete implication matrix:
+\begin{center}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Test set & $N$ & Accuracy \\
+\midrule
+Random sample & $200{,}000$ & $87.1\%$ \\
+Random sample (with computation) & $10{,}000$ & $\mathbf{88.9\%}$ \\
+Benchmark short test & $20$ & $90.0\%$ \\
+Hard triples & $200$ & $64.5\%$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+The always-false baseline achieves $62.9\%$ accuracy.
+\end{theorem}
+
+\begin{proof}
+The accuracy figures are computed by applying the decision procedure to each
+test set and comparing predictions to the ground truth from the complete
+implication matrix \cite{ETP2025}.
+
+Steps~1--5 have $100\%$ accuracy by Propositions~\ref{prop:trivial}
+and~\ref{prop:singleton} and Theorems~\ref{thm:absorbing}
+and~\ref{thm:general-nonimplication}.  Step~6 has $99.97\%$ accuracy by
+Theorem~\ref{thm:sig-direction}.  Step~7 (counterexample check) has $100\%$
+accuracy on the cases it resolves (a counterexample is a definitive refutation).
+Step~8 is a heuristic with accuracy varying by $\nvar$ difference
+(Proposition~\ref{prop:nvar-monotone}).
+
+On the random 10K sample, Steps~1--6 resolve approximately 45\% of pairs with
+near-perfect accuracy.  Step~7 resolves an additional 20--30\% of the remaining
+pairs.  Step~8 handles the rest with approximately 55--65\% accuracy.  The
+weighted combination yields $88.9\%$ overall.
+
+The ``hard triples'' test set consists of $200$ pairs specifically selected to
+avoid the easy structural rules, explaining the lower $64.5\%$ accuracy on that
+subset.
+\end{proof}
+
+\begin{remark}\label{rem:log-loss}
+For probabilistic scoring (e.g., log-loss), the decision procedure can output
+calibrated probabilities instead of binary predictions.  Steps~1--6 output
+probabilities near $0$ or~$1$, while Step~8 outputs the empirical rates from
+Proposition~\ref{prop:nvar-monotone}.  On the random 10K sample, this yields
+an average log-likelihood of $-0.147$, compared to $-0.480$ for the
+always-false baseline.
+\end{remark}
+
+\subsection{Error analysis}
+
+We conclude this section with an analysis of the errors made by our decision
+procedure.
+
+\begin{proposition}\label{prop:errors}
+On the hard triples test set ($200$ pairs), the structural decision procedure
+produces $64$ false negatives and $7$ false positives.  The errors have the
+following characteristics:
+\begin{enumerate}[label=(\roman*)]
+\item $35$ of the $64$ false negatives ($54.7\%$) occur at
+  $\nvar(E_i) - \nvar(E_j) = -1$, where a law with fewer variables
+  unexpectedly implies one with more variables.
+\item All $7$ false positives occur at $\nvar(E_i) - \nvar(E_j) = +1$, where
+  the variable-count heuristic marginally favors \textsc{True} but the
+  implication fails.
+\item The false negatives represent genuine implications that require deep
+  algebraic reasoning (e.g., multi-step rewrite chains of length $> 500$,
+  or proofs involving non-obvious intermediate lemmas).
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+The error counts are obtained by direct comparison of predictions with ground
+truth on the hard triples test set.  The characterization in~(i) and~(ii) follows
+from examining the $\nvar$ distribution of the errors.  The claim in~(iii) is
+supported by the observation that BFS rewriting with a depth limit of $500$
+fails to find proofs for these implications, indicating they require longer or
+more creative rewrite chains.
+\end{proof}

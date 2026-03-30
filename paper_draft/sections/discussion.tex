@@ -1,0 +1,105 @@
+\section{Discussion}\label{sec:discussion}
+
+\subsection{Implications for knowledge distillation}
+
+Our results demonstrate that a large fraction of the equational implication
+structure can be captured by a small number of structural rules.  The
+\emph{absorbing rule} alone (Theorem~\ref{thm:absorbing}) explains 46.8\% of
+all true implications, and the \emph{general non-implication rule}
+(Theorem~\ref{thm:general-nonimplication}) correctly classifies 22.2\% of all
+pairs.  Together with the signature direction principle and variable count
+heuristics, these rules achieve 88.9\% accuracy from purely syntactic features.
+
+This is notable because the original proofs of many individual implications
+in \cite{ETP2025} required sophisticated techniques: automated theorem provers,
+SAT solvers, e-graph reasoning, and hand-crafted infinite constructions.  Yet
+the \emph{aggregate} structure is largely predictable from simple invariants.
+The gap between individual proof difficulty and aggregate predictability
+suggests that equational implication, while undecidable in general
+\cite{McNulty1976}, is statistically regular for low-order laws.
+
+\subsection{Connections to the latent space approach}
+
+Berlioz and Melli\`{e}s \cite{BM2026} showed that the Stone pairing --- the
+probability that a random assignment satisfies an equation in a random finite
+magma --- captures the implication structure in a low-dimensional latent space.
+Our structural form classification is closely related: absorbing laws have
+Stone pairing value zero on all nontrivial magmas (since they force $|M| = 1$),
+while general-form laws tend to have higher satisfaction probabilities on random
+magmas.
+
+The variable count (Proposition~\ref{prop:nvar-monotone}) correlates strongly
+with the first principal component of the Stone pairing matrix, which Berlioz
+and Melli\`{e}s identify as the \emph{expected satisfaction probability}.
+Laws with more variables are harder to satisfy, so they occupy lower positions
+in the latent space --- and implications flow downward.
+
+A natural question is whether the Stone pairing values themselves could be
+encoded compactly to improve prediction.  Each law would require only a short
+vector of probabilities (perhaps $3$--$5$ components from PCA), but encoding
+$4{,}694$ such vectors may exceed the 10KB budget of the distillation challenge.
+
+\subsection{Limitations}
+
+Our approach has several important limitations.
+
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{The hard middle:} Pairs with the same structural form, similar
+  signatures, and equal variable counts remain difficult.  These constitute
+  approximately 30\% of all pairs, and our accuracy on this subset is only
+  55--65\%.  Improving accuracy on these ``hard middle'' cases likely requires
+  algebraic reasoning beyond syntactic features.
+
+\item \textbf{Computational steps and LLM reliability:} Steps~6 and~7 of the
+  decision procedure (counterexample checking and rewriting) require symbolic
+  computation that may not be reliably performed by a weak language model.
+  The text-only cheatsheet version of our rules necessarily omits these steps,
+  reducing accuracy from 88.9\% to approximately 82\%.
+
+\item \textbf{Specificity to order $\le 4$:} Our analysis covers the $4{,}694$
+  laws of order at most~$4$.  It is unclear whether the same structural rules
+  generalize to higher-order laws.  The form classification extends naturally,
+  but the calibrated probability estimates may differ substantially.
+
+\item \textbf{Finite vs.\ infinite implications:} Our rules do not distinguish
+  between $\models$ and $\models_{\mathrm{fin}}$.  By Austin's observation
+  \cite{Austin1965}, these can differ: $E_i \models_{\mathrm{fin}} E_j$ does
+  not imply $E_i \models E_j$ in general.  However, for the $4{,}694$ laws
+  under consideration, the Equational Theories Project found extremely few
+  discrepancies.
+\end{enumerate}
+
+\subsection{Open questions}
+
+\begin{conjecture}\label{conj:95}
+There exists a set of decision rules, expressible in at most $10$\,KB of text,
+that achieves $\ge 95\%$ accuracy on the full implication matrix.
+\end{conjecture}
+
+The gap between our $88.9\%$ and the CNN's $99.7\%$ \cite{ETP2025} suggests
+substantial room for improvement.  The CNN presumably learns features analogous
+to our structural rules but also captures subtler patterns in term structure.
+Distilling these learned features into interpretable rules is an open problem.
+
+\begin{conjecture}\label{conj:equivalence}
+Encoding the $1{,}415$ equivalence classes explicitly (by listing one
+representative per class and the equivalence mappings) would improve accuracy
+by at least $5$ percentage points.
+\end{conjecture}
+
+Such an encoding would allow the decision procedure to first reduce any law
+to its canonical representative, collapsing many apparently distinct cases.
+The storage cost is bounded by $1{,}415$ entries of approximately $3$~bytes
+each (a class index), totaling about $4$\,kB.
+
+We also pose the following theoretical question.
+
+\begin{conjecture}\label{conj:undecidability}
+For equational laws of unbounded order, no finite set of syntactic rules
+achieves accuracy exceeding $80\%$ on the implication relation.
+\end{conjecture}
+
+This would follow if the implication relation for high-order laws becomes
+sufficiently irregular that syntactic features lose their predictive power,
+consistent with the general undecidability of the equational implication
+problem \cite{McNulty1976}.

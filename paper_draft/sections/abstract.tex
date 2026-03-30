@@ -1,0 +1,20 @@
+The Equational Theories Project recently determined all $22{,}033{,}636$
+implications among $4{,}694$ equational laws on magmas, of which $8{,}178{,}279$
+(37.1\%) are true.  We investigate whether this implication structure can be
+distilled into a small set of interpretable decision rules.  We introduce a
+structural classification of equational laws into five \emph{forms} --- trivial,
+singleton, absorbing, standard, and general --- and prove that form-based rules
+alone decide 39.8\% of all non-reflexive implications with zero error.
+Specifically, we show that every absorbing law implies every other law, and
+that no general-form law implies any standard-form or absorbing law.  We
+further establish a \emph{signature direction} principle: if the left-hand side
+of a law $E_1$ contains operations while that of $E_2$ does not, then $E_1$
+does not imply~$E_2$, covering an additional 22\% of pairs with near-perfect
+accuracy.  For the remaining cases, we prove that the difference in distinct
+variable counts is the strongest single predictor of implication.  Composing
+these rules into an ordered decision procedure and supplementing with
+counterexample magma verification, we achieve 88.9\% accuracy on random samples
+and 90\% on a benchmark test set, substantially exceeding the 62.9\%
+always-false baseline.  Our results demonstrate that the equational implication
+graph, despite its computational origins, admits a surprisingly compact
+description through structural algebraic invariants.

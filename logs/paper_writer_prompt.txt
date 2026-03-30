@@ -1,0 +1,718 @@
+You are an academic paper writer for mathematics. Generate a complete AMS-style
+paper based on the mathematical results provided.
+
+════════════════════════════════════════════════════════════════════════════════
+                         IMPORTANT: BEFORE YOU START
+════════════════════════════════════════════════════════════════════════════════
+
+Before writing any content, you MUST complete these steps:
+
+1. READ THE SKILL: Review the paper-writer skill at .claude/skills/paper-writer/SKILL.md
+2. READ THE STYLE GUIDE: Study templates/paper_writing/lab_style_guide.md carefully
+3. REVIEW AMS SAMPLE: Skim paper_draft/example_paper.tex for LaTeX formatting
+   conventions ONLY — it is the official AMS journal sample file that demonstrates
+   how to use amsart theorem environments, equation formatting, list types,
+   bibliography style, and document structure. It is NOT a real paper and its
+   "content" is purely illustrative (placeholder lemmas, dummy proofs, etc.).
+   Do NOT imitate its content or narrative structure.
+4. REVIEW LANGUAGE STYLE: Browse paper_examples/ for language and exposition patterns
+5. VERIFY COMMAND TEMPLATES: Command templates (math.tex, general.tex, macros.tex)
+   are pre-copied to paper_draft/commands/
+
+CRITICAL: The AMS sample file is a LaTeX formatting reference, not a content template.
+Use it to learn \documentclass{amsart} conventions (theorem/proof environments,
+\bibliographystyle{amsplain}, author/address blocks). Write your own content
+based on the research report below.
+
+════════════════════════════════════════════════════════════════════════════════
+                            RESEARCH REPORT
+════════════════════════════════════════════════════════════════════════════════
+
+# Mathematics Distillation Challenge: Research Report
+
+## 1. Executive Summary
+
+We developed a &lt;10KB text cheatsheet for predicting equational implications over magmas, achieving **88.9% accuracy** on random samples (vs. 62.9% for the &#34;always false&#34; baseline) and **90% accuracy** on the benchmark short test. Our approach identifies a hierarchy of decision rules: structural classification rules cover 40% of cases with 100% accuracy, signature direction rules cover an additional 22% with 100% accuracy, and calibrated variable-count heuristics handle the remaining cases. A companion Python predictor achieves the same results computationally, serving as a reference implementation.
+
+## 2. Goal
+
+**Research Question:** Can the implication structure of 4694 equational laws over magmas be distilled into a compact (&lt;10KB) text cheatsheet that enables accurate prediction of whether Equation 1 implies Equation 2?
+
+**Background:** The Equational Theories Project (Bolan, Breitner, ..., Tao et al., 2025) completely determined the 22,033,636 implications between 4694 equational laws on magmas, formalized in Lean. Of these, 8,178,279 (37.12%) are true and 13,855,357 (62.88%) are false. The full bit table compresses to 40kB with LZMA2 and a CNN achieves 99.7% accuracy, suggesting the structure is highly compressible.
+
+The Mathematics Distillation Challenge (Stage 1) asks participants to create a plain-text cheatsheet (&lt;10KB) that helps a weak LLM answer true/false implication questions, scored by log-loss.
+
+## 3. Data Construction
+
+### Dataset Description
+- **Source:** Equational Theories Project (teorth/equational_theories on GitHub)
+- **Equations:** 4,694 equational laws over magmas, up to order 4
+- **Implication matrix:** 4694×4694 matrix where positive entries indicate true implications
+- **Format:** Equations as strings using `*` for the magma operation, e.g., `x = x * (y * z)`
+
+### Key Statistics
+| Statistic | Value |
+|-----------|-------|
+| Total equations | 4,694 |
+| Total non-reflexive pairs | 22,028,942 |
+| True implications | 8,178,279 (37.12%) |
+| False implications | 13,855,357 (62.88%) |
+| Equivalence classes | 1,415 |
+| Laws equivalent to E2 (x=y) | 1,496 |
+
+### Equation Form Distribution
+| Form | Count | Description |
+|------|-------|-------------|
+| STANDARD (lhs_var) | 2,322 | x = f(x, ...) — LHS is variable appearing in RHS |
+| GENERAL | 1,555 | f(...) = g(...) — both sides have operations |
+| ABSORBING | 815 | x = f(y, z, ...) — LHS variable not in RHS |
+| TRIVIAL | 1 | x = x |
+| SINGLETON | 1 | x = y |
+
+## 4. Experiment Description
+
+### Methodology
+
+#### High-Level Approach
+We analyzed the full 4694×4694 implication matrix to extract structural patterns, validated them statistically, and composed the most reliable rules into a cheatsheet format.
+
+#### Phase 1: Structural Pattern Discovery
+We classified each equation by form (trivial, singleton, absorbing, standard, general), signature (lhs_ops, rhs_ops), and variable count. We then computed implication rates for every combination of (form1, form2), (sig1, sig2), and (nvars1, nvars2).
+
+#### Phase 2: Rule Extraction and Validation
+We identified rules with 100% accuracy (zero exceptions in the full matrix) and rules with near-100% accuracy. Each rule was validated against all 22M pairs.
+
+#### Phase 3: Probabilistic Calibration
+For cases not covered by absolute rules, we computed calibrated base rates conditioned on variable count difference, form pair, and signature relationship.
+
+#### Phase 4: Python Predictor Implementation
+We implemented the full decision procedure in Python (`src/final_predictor.py`) including:
+- Structural classification
+- Signature direction checking
+- BFS rewriting (searching for proof by rewriting one side of E2 into the other)
+- Counterexample magma search (testing ~1000+ small magmas)
+- Hill-climbing counterexample search
+- Hash-based polynomial counterexample detection
+- Calibrated probability estimation
+
+### Tools and Libraries
+| Library | Version | Purpose |
+|---------|---------|---------|
+| Python | 3.12.8 | Runtime |
+| NumPy | 2.4.4 | Matrix operations |
+| Pandas | 3.0.1 | CSV loading |
+
+### Evaluation Protocol
+- **Random sample:** 200,000 randomly sampled pairs from the full matrix
+- **Short test:** 20 hand-picked test cases from the competition
+- **Hard triples:** 200 deliberately challenging test cases
+- **Seed:** 42 for random sampling
+
+## 5. Results
+
+### Rule Performance (Individual Rules)
+
+| Rule | Coverage | Accuracy | Type |
+|------|----------|----------|------|
+| Trivial/Singleton | 0.07% | 100% | Classification |
+| Absorbing implies all | 17.4% | 100% | Classification |
+| General ⊬ Standard/Absorbing/Singleton | 22.2% | 100% | Classification |
+| Signature LHS direction | 22.2% | 99.97% | Signature |
+| Variable count ≤-3 → False | ~0.5% | 96% | Heuristic |
+| Variable count ≥3 → True | ~0.5% | ~70% | Heuristic |
+
+### Combined Rule Performance
+| Rule Set | Coverage | Accuracy |
+|----------|----------|----------|
+| All absolute rules (100% accuracy) | 39.8% | 100.0% |
+| + Signature rules | ~45% | 99.97% |
+| + Variable heuristics | 100% | 87.1% |
+
+### Final Predictor Performance
+
+| Test Set | N | Accuracy | Avg Log-Likelihood | Improvement over &#34;always false&#34; |
+|----------|---|----------|--------------------|---------------------------------|
+| Random sample | 200,000 | **87.06%** | -0.174 | +24.2% |
+| Short test | 20 | **90%** | -0.116 | +27.1% |
+| Hard triples | 200 | **64.5%** | -0.667 | +1.6% |
+| Random 10K (w/ full computation) | 10,000 | **88.9%** | -0.147 | +25.9% |
+
+### Key Findings
+
+**Finding 1: Structural form is the dominant predictor.**
+The equation&#39;s structural form (trivial, singleton, absorbing, standard, general) alone determines 40% of implications with zero errors. The most powerful rule: absorbing equations (815 of 4694) imply ALL other equations — accounting for 3.8M true implications.
+
+**Finding 2: Signature direction is an absolute rule.**
+Equations with operations on the left side of = (general form) NEVER imply equations with only a bare variable on the left (standard form). This covers 22% of all pairs with zero exceptions.
+
+**Finding 3: Variable count is the best heuristic for uncertain cases.**
+Among cases not decided by absolute rules, the difference in distinct variable counts is the single strongest predictor:
+
+| nvars(E1) - nvars(E2) | True rate | Recommended answer |
+|------------------------|-----------|-------------------|
+| ≤ -3 | 4% | FALSE |
+| -2 | 11% | FALSE |
+| -1 | 21% | FALSE |
+| 0 | 33% | FALSE |
+| +1 | 49% | TRUE (marginal) |
+| +2 | 61% | TRUE |
+| ≥ +3 | 70% | TRUE |
+
+**Finding 4: 2-variable standard-form equations are almost powerless.**
+Equations with only 2 variables in standard form (like &#34;x = x * y&#34;) have an implication rate of &lt;2% toward equations with 2+ variables. This is a strong negative signal.
+
+**Finding 5: Computational methods are highly effective when applicable.**
+BFS rewriting and counterexample search decisively resolve many individual cases:
+- BFS rewriting finds proofs for implications where the rewrite chain is ≤500 steps
+- Counterexample search with ~1000 small magmas (size 2-6) catches most non-implications
+- Together they push the 10K-sample accuracy from 82% (heuristics only) to 89%
+
+### Error Analysis
+
+Analysis of errors on the hard test set (200 cases):
+- **64 false negatives** (predicted False, actually True): These are genuine implications that require deep algebraic reasoning beyond simple rewriting. Most (35/64) occur at nvars_diff = -1, where the weaker equation unexpectedly implies the stronger one.
+- **7 false positives** (predicted True, actually False): Marginal cases at nvars_diff = +1 where the heuristic slightly favors True.
+
+The hard triples are specifically designed to be difficult — they avoid the easy structural rules and sit in the borderline zone where heuristics are least reliable.
+
+## 6. Cheatsheet Design
+
+The final cheatsheet (`results/cheatsheet.txt`, 6.6KB) is structured as an ordered decision procedure:
+
+1. **Classify equation forms** (trivial, singleton, absorbing, standard, general)
+2. **Apply absolute rules** (5 rules, 100% accuracy)
+3. **Check signature direction** (2 rules, ~100% accuracy)
+4. **Check substitution** (if E2 is instance of E1 → TRUE)
+5. **Attempt rewriting** (use E1 as rewrite rule on E2)
+6. **Try counterexample magmas** (specific small magmas listed)
+7. **Apply variable count heuristic** (calibrated probabilities)
+8. **Default to FALSE** (base rate is 63% false)
+
+The cheatsheet provides:
+- Clear definitions of each equation form with examples
+- Explanations of WHY each rule works (helps LLM understand)
+- Specific magmas to try as counterexamples
+- Calibrated probability estimates for the heuristic zone
+- A quick reference summary at the end
+
+## 7. Limitations
+
+1. **Hard cases remain hard:** The variable-count heuristic is only ~50-65% accurate for same-variable-count pairs. These cases require genuine algebraic reasoning.
+2. **LLM execution uncertainty:** The cheatsheet is designed for human/LLM reading, but weak LLMs may not reliably follow multi-step procedures or check counterexamples.
+3. **Computational steps may be unreliable for LLMs:** Steps 4-6 (substitution, rewriting, counterexamples) require careful symbolic computation that weak LLMs may perform incorrectly.
+4. **The cheatsheet optimizes for text format:** The Python predictor achieves higher accuracy (89%) because it can actually compute rewrites and check counterexamples. The text cheatsheet relies more heavily on the structural rules.
+
+## 8. Open Questions
+
+1. Can the cheatsheet be improved by encoding specific equation equivalence classes?
+2. Would listing the &#34;top 20 most discriminating magmas&#34; improve counterexample checking?
+3. Can Stone pairing statistics (from Berlioz &amp; Mellies 2026) be encoded compactly?
+4. What is the theoretical maximum accuracy achievable with &lt;10KB of text?
+5. How much does the specific LLM model affect cheatsheet effectiveness?
+
+## 9. Conclusions
+
+We successfully distilled the equational implication structure into a 6.6KB cheatsheet achieving 87-89% accuracy on random samples, significantly above the 63% &#34;always false&#34; baseline. The key insight is that a small set of structural rules — based on equation form, signature direction, and variable count — capture the vast majority of the implication structure. The most surprising finding is the absolute nature of many rules: absorbing equations imply everything, general equations never imply standard-form equations, and signature direction is nearly inviolable.
+
+For Stage 1 of the competition (true/false classification), the cheatsheet provides clear, ordered decision steps that should be followable by a weak LLM. The main risk is in the uncertain middle zone (same variable count, same form) where genuine mathematical reasoning is needed.
+
+## 10. References
+
+1. Bolan, Breitner, Brox, ..., Tao et al. &#34;The Equational Theories Project.&#34; arXiv:2512.07087, 2025.
+2. Berlioz &amp; Mellies. &#34;The Latent Space of Equational Theories.&#34; arXiv:2601.20759, 2026.
+3. Tao, T. &#34;Mathematics Distillation Challenge: Equational Theories.&#34; Blog post, March 2026.
+4. SAIR Foundation. Mathematics Distillation Challenge competition page, 2026.
+
+
+════════════════════════════════════════════════════════════════════════════════
+                            RESEARCH PLAN
+════════════════════════════════════════════════════════════════════════════════
+
+# Research Plan: Mathematics Distillation Challenge
+
+## Motivation &amp; Novelty Assessment
+
+### Why This Research Matters
+The Mathematics Distillation Challenge asks whether 22 million proven equational implications can be compressed into &lt;10KB of human-readable text that enables a weak LLM to predict implication outcomes. This tests the fundamental question: can mathematical knowledge be distilled into compact, interpretable rules?
+
+### Gap in Existing Work
+The Equational Theories Project completely solved the implication graph computationally, but no one has attempted to distill this into a compact, LLM-readable format. The CNN achieves 99.7% accuracy but is a black box. We need interpretable rules.
+
+### Our Novel Contribution
+We systematically extract decision rules from the full 22M implication matrix, quantify their accuracy and coverage, and compose them into an optimized cheatsheet. Our approach combines:
+1. Structural classification rules (100% accuracy on 40% of cases)
+2. Signature direction rules (100% accuracy on additional cases)
+3. Computational verification (BFS rewriting, counterexample search)
+4. Calibrated probabilistic heuristics for remaining cases
+
+### Experiment Justification
+- Experiment 1 (Matrix Analysis): Extract statistical patterns from the full 4694×4694 implication matrix to identify reliable decision rules
+- Experiment 2 (Rule Evaluation): Measure accuracy and coverage of each candidate rule independently and combined
+- Experiment 3 (Cheatsheet Design): Compose rules into &lt;10KB text optimized for LLM comprehension
+- Experiment 4 (Evaluation): Test on short_test, hard_triples, and random samples
+
+## Research Question
+Can the equational implication structure over 4694 magma laws be distilled into a &lt;10KB text cheatsheet achieving &gt;55% accuracy when used by a weak LLM?
+
+## Hypothesis Decomposition
+1. Structural classification (form type) provides 100%-accurate rules covering ~40% of cases
+2. Signature direction provides additional 100%-accurate rules
+3. Variable count is the dominant heuristic for remaining cases
+4. Small counterexample magmas can verify many non-implications
+5. BFS rewriting can verify some positive implications
+
+## Methodology
+- Load the full implication matrix (4694×4694) and equations list
+- Classify equations by structural form, signature, and variable count
+- Compute implication rates for each (form, signature, nvars) combination
+- Identify rules with 100% or near-100% accuracy
+- Calibrate probabilistic heuristics for uncertain cases
+- Compose into cheatsheet text &lt;10KB
+
+## Success Criteria
+- Random sample accuracy &gt; 80% (achieved: 88.9%)
+- Short test accuracy &gt; 80% (achieved: 90%)
+- Hard triples accuracy &gt; 55% (achieved: 64.5%)
+- Average log-likelihood &gt; -0.5 (achieved: -0.15)
+
+
+════════════════════════════════════════════════════════════════════════════════
+                          LITERATURE REVIEW
+════════════════════════════════════════════════════════════════════════════════
+
+# Literature Review: Mathematics Distillation Challenge
+
+## Research Area Overview
+
+The **Mathematics Distillation Challenge** is a competition launched by Terence Tao and Damek Davis (hosted by the SAIR Foundation, March 2026) that asks: can the 22 million true/false implications between 4694 equational laws on magmas be &#34;distilled&#34; into a short (&lt;10KB) human-readable cheat sheet that enables weak LLMs to correctly classify implications at &gt;55% accuracy (baseline ~50%)?
+
+This builds on the **Equational Theories Project (ETP)**, a collaborative formal mathematics project (Sept 2024 - April 2025) that completely determined the implication graph between 4694 equational laws on magmas, with all proofs formalized in Lean.
+
+The core question: Given two equations E1, E2 over magmas, does E1 imply E2? That is, does every magma satisfying E1 also satisfy E2?
+
+---
+
+## Key Definitions
+
+**Magma.** A set M equipped with a binary operation diamond: M x M -&gt; M. No axioms are required (unlike groups, rings, etc.).
+
+**Equational law.** An identity involving the binary operation and formal variables, e.g., x diamond (y diamond z) = (x diamond y) diamond z (associativity, E4512).
+
+**Implication (E |= E&#39;).** Every magma satisfying E also satisfies E&#39;. The 4694 laws produce 4694 x 4693 = 22,028,942 potential implications.
+
+**Finite implication (E |=_fin E&#39;).** Every *finite* magma satisfying E also satisfies E&#39;. E |= E&#39; implies E |=_fin E&#39;, but the converse can fail (Austin&#39;s observation).
+
+**Order of a law.** The number of occurrences of the magma operation. The 4694 laws have order at most 4.
+
+**Equivalence.** Two laws are equivalent if they mutually imply each other. The 4694 laws form 1415 equivalence classes; the largest has 1496 laws equivalent to the singleton law x = y (E2).
+
+**Duality.** Replacing x diamond y with y diamond x maps laws to their &#34;dual&#34; (or &#34;conjugate&#34;). Duality is a symmetry of the implication preorder.
+
+**Signature (a,b).** The number of diamond operations on the left-hand and right-hand sides of an equation. E.g., associativity has signature (2,2), Tarski&#39;s axiom has signature (0,3).
+
+---
+
+## Key Papers
+
+### Paper 1: The Equational Theories Project (Bolan, Breitner, Brox, ... Tao, et al., 2025)
+- **arXiv:** 2512.07087
+- **File:** papers/2512.07087_equational_theories_project.pdf
+- **Main Results:**
+  - Complete determination of all 22,033,636 implications E |= E&#39; between 4694 equational laws, formalized in Lean.
+  - Of these, 8,178,279 (37.12%) are true; 13,855,357 (62.88%) are false.
+  - 1415 equivalence classes; 1496 laws equivalent to the singleton law E2.
+  - Only 10,657 (0.13%) of positive implications needed a direct proof (rest follow by transitivity and duality).
+  - A CNN with 5 convolutional layers achieves 99.7% accuracy on implication prediction from equation syntax alone.
+  - The bit table (42MB uncompressed) compresses to 40kB with LZMA2.
+- **Proof Techniques:**
+  1. **Finite magma counterexamples:** Brute-force search over all magmas of size &lt;=4 refutes 96.3% of false implications with 524 distinct magmas.
+  2. **Syntactic rewriting:** Laws of the form x = f(y,z,...) are automatically equivalent to x = y (E2). Simple rewrites generate ~15,000 direct implications.
+  3. **Matching invariants:** Variable multiplicities, free magma computations, and modular arithmetic detect many non-implications syntactically.
+  4. **Canonizers:** Functions on free magma terms that map equivalent terms to the same normal form, building on rewrite system theory.
+  5. **Automated theorem provers (ATPs):** Vampire, Prover9/Mace4, Z3, Duper, egg-based equational reasoning (MagmaEgg), twee. ATPs established a complete generating set of positive implications.
+  6. **Linear/quadratic magma constructions:** Operations of the form x diamond y = ax + by over finite fields or Z/nZ produce counterexamples.
+  7. **Greedy constructions:** Build infinite magmas element-by-element, defining the operation to satisfy one law while violating another.
+  8. **Extension/cohomology methods:** Extend known magmas via &#34;cocycle equations&#34; to produce new counterexamples.
+  9. **SAT solvers:** Glucose, Kissat, PySAT for finite model finding.
+- **Relevance to Distillation Challenge:** This is the foundational paper. The techniques catalog (syntactic rules, small counterexamples, variable multiplicities, duality) are exactly what a cheat sheet must distill.
+
+### Paper 2: The Latent Space of Equational Theories (Berlioz &amp; Mellies, 2026)
+- **arXiv:** 2601.20759
+- **File:** papers/2601.20759_latent_space_equational_theories.pdf
+- **Main Results:**
+  - Constructs a &#34;latent space&#34; of equational theories using Stone pairings: for each equation and each randomly sampled finite magma, compute the probability that a random variable assignment satisfies the equation.
+  - PCA on this probability matrix produces a 3D embedding where:
+    - X-axis correlates with expected satisfaction probability (expectation)
+    - Y-axis correlates with variance of satisfaction
+    - Z-axis detects duality/conjugacy (conjugate theories are reflected across Z=0)
+  - Equivalent theories cluster tightly (reversible edges are 7x shorter than atomic edges in the latent space).
+  - Implications flow in a well-structured, oriented way through the latent space.
+  - Signature (a,b) is clearly separated in the latent space.
+- **Proof Techniques:**
+  - Stone pairing: probability that random assignment satisfies an equation in a finite magma
+  - PCA dimensionality reduction on the Stone pairing matrix
+  - Stone spectrum and interference spectrum for detecting conjugacy and independence
+- **Relevance to Distillation Challenge:** The Stone pairing approach suggests that statistical properties of equations (satisfaction probability on random magmas) are highly informative for predicting implications. A cheat sheet could encode these statistical features.
+
+---
+
+## Known Results (Prerequisite Theorems)
+
+| Result | Source | Statement Summary | Relevance |
+|--------|--------|-------------------|-----------|
+| Birkhoff completeness | [Birkhoff, classic] | E |= E&#39; iff LHS of E&#39; can be transformed to RHS by finitely many substitution rewrites using E | Theoretical foundation for positive implications |
+| Undecidability | [McNulty, 1976] | Determining E |= E&#39; is undecidable in general | Explains why automated methods are needed |
+| Kisielewicz&#39;s theorem | [Kisielewicz, 1994] | Every law of order &lt;=4 either implies x=y or has a non-trivial finite model | All non-trivial laws have finite counterexamples |
+| Austin&#39;s observation | [Austin, 1965] | E |=_fin E&#39; does not imply E |= E&#39; in general | Finite vs infinite magma distinction matters |
+| Tarski&#39;s axiom | [Tarski] | E543: x = y diamond (z diamond (x diamond (y diamond z))) characterizes subtraction in abelian groups | Example of deep algebraic characterization |
+| CNN compression | [ETP paper, 2025] | 5-layer CNN achieves 99.7% accuracy; bit table compresses to 40kB | Shows the graph is highly compressible |
+
+---
+
+## Proof Techniques in the Literature
+
+### For establishing implications (E |= E&#39;)
+1. **Direct rewriting:** Apply the law E as a rewrite rule to transform LHS of E&#39; into RHS. Brute-force rewriting generates ~15,000 direct implications.
+2. **Transitivity and duality:** Only 10,657 implications need direct proof; the rest follow from transitivity of |= and the duality symmetry.
+3. **ATP saturation:** Vampire and similar provers use superposition calculus. Very effective for equational theories.
+4. **Equational reasoning / e-graphs:** egg-based equality saturation. Produces explicit rewrite chains as proofs.
+5. **Finite magma surjectivity/injectivity:** On finite sets, surjectivity = injectivity, giving additional implications for |=_fin.
+
+### For refuting implications (E |/= E&#39;)
+1. **Finite counterexample magmas:** Size 2-4 magmas refute 96.3% of false implications. Only 524 distinct magmas needed.
+2. **Linear magmas:** x diamond y = ax + by over Z/nZ. Rich source of structured counterexamples.
+3. **Matching invariants:** Variable multiplicity, free magma structure, modular arithmetic.
+4. **Greedy/infinite constructions:** Build magmas element-by-element.
+5. **SAT/SMT solvers:** Encode magma axioms as Boolean satisfiability.
+
+---
+
+## Key Statistics for Distillation
+
+- **Total implications:** 22,033,636 (including reflexive)
+- **True implications:** 8,178,279 (37.12%)
+- **False implications:** 13,855,357 (62.88%)
+- **Equivalence classes:** 1415
+- **Laws equivalent to E2 (singleton):** 1496 (~31.9% of all laws)
+- **Bit table compressed size:** 40kB (shows high compressibility)
+- **CNN accuracy:** 99.7% with a simple 5-layer model
+
+### Paper 3: How to Use Deep Learning to Identify Sufficient Conditions (Aliniaeifard &amp; Li, 2025)
+- **Source:** Semantic Scholar (CorpusId: 283251416)
+- **Main Results:** Develops a method for identifying sufficient conditions that imply a given mathematical statement using neural networks with custom loss functions and attribution techniques.
+- **Relevance:** Demonstrates that ML can learn mathematical implication structure from data, supporting the feasibility of the distillation challenge approach.
+
+### Paper 4: LINC: Logical Inference via Neurosymbolic Computation (Olausson et al., 2023)
+- **Source:** Semantic Scholar
+- **Main Results:** LLM acts as semantic parser translating to first-order logic, offloaded to external theorem prover. StarCoder+ with LINC outperforms GPT-3.5 and GPT-4 with CoT on ProofWriter.
+- **Relevance:** Shows that combining LLM parsing with structured logical reasoning outperforms pure LLM approaches -- relevant to cheat sheet design that provides structured reasoning templates.
+
+---
+
+## Competition Details (Stage 1 &amp; Stage 2)
+
+### Stage 1 (Current - Deadline April 20, 2026)
+- Create a **cheat sheet** (max 10KB text) that helps weak/cheap LLMs answer true/false
+- **Public test set:** 1,200 problems (1,000 standard + 200 hard)
+- Baseline accuracy ~50% (random); target 55-60%+
+- 10 daily playground credits per participant
+- Full 22M dataset downloadable for local testing
+- Incentive: if your cheatsheet is cited as inspiration by a Stage 2 qualifier, you also qualify
+
+### Stage 2 (Top 1,000 from Stage 1)
+- Must provide **probability estimates** (scored by log-loss)
+- Must generate **formal certificates** (Lean proofs or explicit counterexamples)
+- More advanced language models evaluated
+- Modest prizes planned
+
+---
+
+## Gaps and Opportunities
+
+1. **The cheat sheet challenge:** No existing work has attempted to encode the implication structure as a &lt;10KB human-readable prompt. This is the novel contribution required.
+2. **Simple heuristics may be powerful:** The high base rate (62.88% are false) means a &#34;always say false&#34; strategy gets ~63%. The challenge is to beat this with principled rules.
+3. **Syntactic features are informative:** Variable counts, equation signatures, and simple structural properties already determine many implications.
+4. **Statistical features (Stone pairings):** The latent space paper shows that satisfaction probabilities on random magmas predict implications well. Could compact statistics be encoded?
+5. **The open problem E677 |=_fin E255:** Even the full ETP could not resolve this for finite magmas, showing the problem has genuine mathematical depth.
+
+---
+
+## Recommendations for Proof Strategy
+
+### Cheat Sheet Design Strategies
+
+1. **Encode syntactic classification rules:**
+   - Laws where x appears alone on one side and all other variables appear only on the other side imply E2 (singleton).
+   - Variable multiplicity matching: if multiplicities don&#39;t match, implication is false.
+   - Signature-based rules: implications tend to flow from stronger (more constrained) to weaker laws.
+
+2. **Encode a small set of key counterexample magmas:**
+   - The 524 magmas of size &lt;=4 that refute 96.3% of false implications could be summarized compactly.
+   - Even listing the most powerful 10-20 magmas with their satisfied/unsatisfied equation patterns would be valuable.
+
+3. **Encode equivalence class structure:**
+   - List the major equivalence classes and their characterizing properties.
+   - Laws equivalent to E1 (trivial), E2 (singleton), E46 (constant), and other key laws.
+
+4. **Encode duality:**
+   - If E1 implies E2, then dual(E1) implies dual(E2). This halves the effective problem space.
+
+5. **Statistical/probabilistic features:**
+   - Expected satisfaction probability correlates with implication direction (stronger laws have lower expectation).
+   - A compact encoding of Stone pairing statistics could guide predictions.
+
+6. **Decision tree / rule-based approach:**
+   - Combine the above into a structured decision procedure: first check syntactic rules, then signature, then known equivalences, then default to statistical prediction.
+
+
+════════════════════════════════════════════════════════════════════════════════
+                          PAPER REQUIREMENTS
+════════════════════════════════════════════════════════════════════════════════
+
+Generate a complete mathematics paper with the following structure:
+
+1. TITLE
+   - Clear, specific, informative
+   - Should convey the main result or the mathematical objects studied
+   - Mathematical convention: concise and precise
+
+2. AUTHOR
+   - Use this exact author line: Chenhao Tan and NeuriCo
+
+3. ABSTRACT (150-250 words)
+   - State the problem or question investigated
+   - Summarize the main results (theorem statements in words)
+   - Mention proof techniques used
+   - Note any computational verification
+
+4. INTRODUCTION
+   - Mathematical problem and motivation
+   - History and context of the problem
+   - Summary of known results (with citations)
+   - Statement of main contributions (informal preview)
+   - Paper organization
+
+5. PRELIMINARIES
+   - Notation and conventions
+   - Definitions needed for the paper
+   - Prerequisite results (stated with citations, not reproved)
+   - This section ensures the paper is self-contained
+
+6. MAIN RESULTS
+   - Formal theorem statements
+   - Complete proofs
+   - Supporting lemmas and propositions with proofs
+   - Examples illustrating the results
+   - Remarks connecting to other areas
+
+7. DISCUSSION
+   - Implications of the results
+   - Connections to related problems
+   - Open questions and conjectures
+   - Possible generalizations
+
+8. CONCLUSION
+   - Summary of contributions
+   - Future directions
+
+9. REFERENCES
+   - BibTeX format
+   - All cited papers and textbooks
+
+════════════════════════════════════════════════════════════════════════════════
+                          OUTPUT FORMAT
+════════════════════════════════════════════════════════════════════════════════
+
+Create a MODULAR LaTeX project with the following directory structure:
+
+paper_draft/
+├── main.tex              # Main file that imports all sections
+├── references.bib        # BibTeX references
+├── sections/
+│   ├── abstract.tex      # Abstract content
+│   ├── introduction.tex  # Introduction section
+│   ├── preliminaries.tex # Definitions, notation, prerequisites
+│   ├── main_results.tex  # Theorems and proofs
+│   ├── discussion.tex    # Discussion and open questions
+│   └── conclusion.tex    # Conclusion section
+├── figures/              # Directory for any generated figures
+└── appendix/             # Directory for appendix sections (if needed)
+
+INSTRUCTIONS:
+1. First, create the directory structure above (mkdir -p paper_draft/sections paper_draft/figures paper_draft/appendix)
+2. Write main.tex using the AMS document class with proper theorem environments:
+
+   \documentclass{amsart}
+   \usepackage{amsmath,amssymb,amsthm}
+   \usepackage[hidelinks]{hyperref}
+   \usepackage{graphicx}
+   \usepackage{enumitem}
+
+   % Theorem environments
+   \newtheorem{theorem}{Theorem}[section]
+   \newtheorem{lemma}[theorem]{Lemma}
+   \newtheorem{proposition}[theorem]{Proposition}
+   \newtheorem{corollary}[theorem]{Corollary}
+   \newtheorem{conjecture}[theorem]{Conjecture}
+
+   \theoremstyle{definition}
+   \newtheorem{definition}[theorem]{Definition}
+   \newtheorem{example}[theorem]{Example}
+
+   \theoremstyle{remark}
+   \newtheorem{remark}[theorem]{Remark}
+
+   % Import command files (if they exist)
+   \InputIfFileExists{commands/math}{}{}
+   \InputIfFileExists{commands/general}{}{}
+   \InputIfFileExists{commands/macros}{}{}
+
+   % Bibliography style
+   \bibliographystyle{amsplain}
+
+   \author{Chenhao Tan and NeuriCo}
+
+   - Use \input{sections/...} to include each section
+   - Use \bibliography{references} for references
+3. Write each section file with COMPLETE content (no placeholders)
+4. Each section file should include its \section{} command
+5. Write references.bib with all citations in BibTeX format
+6. After writing all files, compile the paper:
+   cd paper_draft && pdflatex -interaction=nonstopmode main.tex && bibtex main && pdflatex -interaction=nonstopmode main.tex && pdflatex -interaction=nonstopmode main.tex
+
+NOTE ON DOCUMENT CLASS:
+- Use \documentclass{amsart} (NOT \documentclass{article} with \usepackage{style})
+- The amsart class is part of the standard LaTeX distribution — no .sty file needed
+- It provides proper formatting for mathematical papers: theorem numbering,
+  proof environments, AMS math fonts, and standard math journal layout
+
+This modular structure allows humans to easily:
+- Edit individual sections without navigating a large file
+- Track changes per section
+- Reuse sections across different paper versions
+
+════════════════════════════════════════════════════════════════════════════════
+                          QUALITY REQUIREMENTS
+════════════════════════════════════════════════════════════════════════════════
+
+- Academic mathematical tone throughout
+- Every theorem must have a complete proof
+- All definitions must be precise and unambiguous
+- Proper citations using \cite{} commands
+- NO placeholder text - every section must have real content
+- The paper MUST compile without errors
+- If compilation fails, debug and fix the LaTeX errors
+
+════════════════════════════════════════════════════════════════════════════════
+                       MATHEMATICAL WRITING STYLE
+════════════════════════════════════════════════════════════════════════════════
+
+Follow these conventions for mathematical papers:
+
+1. LANGUAGE STYLE:
+   - Use "we" for collaborative exposition: "We prove", "We show", "We define"
+   - Be precise and direct: state results clearly before proving them
+   - Prefer plain language: "We now prove..." over "We shall henceforth demonstrate..."
+   - Use the present tense for mathematical facts: "Theorem 1 shows..."
+   - Avoid vague language: instead of "clearly" or "obviously", explain why
+
+2. INTRODUCTION STRUCTURE:
+   - Context and motivation (why this problem matters)
+   - History (what's known, with citations)
+   - Statement of results (informal but precise)
+   - Proof techniques (brief overview of methods)
+   - Paper organization (roadmap)
+
+3. THEOREM ENVIRONMENTS:
+   Use proper LaTeX theorem environments:
+   \begin{theorem}\label{thm:main}
+     Let $G$ be a graph with $n$ vertices. Then...
+   \end{theorem}
+
+   \begin{proof}
+     We proceed by induction on $n$. ...
+   \end{proof}
+
+4. DEFINITIONS:
+   \begin{definition}\label{def:widget}
+     A \emph{widget} is a pair $(X, \tau)$ where...
+   \end{definition}
+
+   - Italicize the term being defined using \emph{}
+   - State all conditions explicitly
+   - Give examples immediately after non-trivial definitions
+
+5. PROOF STRUCTURE:
+   - Begin with proof strategy: "The proof proceeds in two steps..."
+   - Number or label key claims within proofs
+   - Use \qedhere for proofs ending in displayed equations
+   - Signal transitions: "It remains to show...", "We now verify..."
+
+6. NOTATION CONVENTIONS:
+   - Define all notation in Preliminaries
+   - Use standard notation: $\mathbb{R}$, $\mathbb{Z}$, $\mathbb{N}$
+   - Use \coloneqq or := for definitions
+   - Be consistent: one symbol = one meaning throughout
+
+7. MATHEMATICAL FORMATTING:
+   - Displayed equations for important formulas: \[ ... \]
+   - Inline math for brief expressions: $...$
+   - Use align environment for multi-line equations
+   - Number only equations that are referenced later
+
+8. REFERENCES AND CITATIONS:
+   - Cite prior results when used: "By \cite{author2024}..."
+   - Distinguish between "Theorem 3 of \cite{...}" and your own results
+   - Include both classic references and recent work
+
+9. EXAMPLES AND COUNTEREXAMPLES:
+   - Illustrate each major result with a concrete example
+   - Show tightness: counterexamples demonstrating necessity of hypotheses
+   - Use \begin{example} ... \end{example} environment
+
+10. FIGURES (if applicable):
+    - Diagrams for geometric arguments
+    - Graphs or plots from computational verification
+    - Commutative diagrams for algebraic results
+    - Use TikZ or include pre-generated figures
+
+════════════════════════════════════════════════════════════════════════════════
+                          WORKFLOW: REVIEW AND REFLECT
+════════════════════════════════════════════════════════════════════════════════
+
+Before calling finish, you MUST complete these review steps:
+
+1. REVIEW RESOURCES (at the start):
+   - Read .claude/skills/paper-writer/SKILL.md for detailed guidance
+   - Study templates/paper_writing/lab_style_guide.md for style conventions
+   - Skim paper_draft/example_paper.tex for amsart LaTeX conventions only
+   - Browse paper_examples/ for language patterns (if available)
+
+2. SELF-REFLECTION (before finishing):
+   After writing all sections, review your work against these criteria:
+
+   MATHEMATICAL CONTENT CHECK:
+   - [ ] Every theorem has a complete, rigorous proof
+   - [ ] All definitions are precise with explicit quantifiers
+   - [ ] Examples illustrate major results
+   - [ ] Counterexamples show necessity of hypotheses where applicable
+   - [ ] Notation is consistent throughout
+
+   FORMATTING CHECK:
+   - [ ] Theorem environments (\begin{theorem}...\end{theorem}) used properly
+   - [ ] Proof environments (\begin{proof}...\end{proof}) used for all proofs
+   - [ ] Is hyperref package included for clickable references?
+   - [ ] Labels and cross-references work correctly
+   - [ ] Bibliography entries are complete
+
+   STRUCTURE CHECK:
+   - [ ] Introduction previews main results clearly
+   - [ ] Preliminaries section makes the paper self-contained
+   - [ ] Results are ordered logically (lemmas before theorems that use them)
+   - [ ] Does the paper compile without errors?
+
+3. FIX ISSUES:
+   - Address any issues found in the self-reflection
+   - Re-compile and verify the PDF looks correct
+
+Only after completing this review should you consider the paper finished.
